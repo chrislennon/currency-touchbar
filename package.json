@@ -1,12 +1,9 @@
 {
   "name": "currency-touchbar",
   "version": "1.0.0",
-  "description": "A web app to build Apple touch bar elements for currencies",
+  "description": "A web app to build BetterTouchTool widget for currency rates",
   "main": "index.html",
-  "scripts": {
-    "start": "node node_modules/watch-http-server/bin/http-server",
-    "deploy": "node ./deploy.js"
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chrislennon/currency-touchbar.git"
@@ -23,14 +20,6 @@
     "url": "https://github.com/chrislennon/currency-touchbar/issues"
   },
   "homepage": "https://github.com/chrislennon/currency-touchbar#readme",
-  "dependencies": {
-    "choices.js": "^3.0.2",
-    "cryptocoins-icons": "^2.7.0",
-    "flatpickr": "^4.1.4",
-    "font-awesome-svg-png": "^1.2.2"
-  },
-  "devDependencies": {
-    "gh-pages": "^1.1.0",
-    "watch-http-server": "^0.7.6"
-  }
+  "dependencies": {},
+  "devDependencies": {}
 }

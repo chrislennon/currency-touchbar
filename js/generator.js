@@ -7,17 +7,8 @@ export default {
     loadTemplate: loadTemplate
 }
 
-function clearTempSVGs(){
-    // Purge all Canvas SVGs after Export
-    let myNode = document.getElementById("canvas-area");
-    while (myNode.firstChild) {
-        myNode.removeChild(myNode.firstChild);
-    }
-}
-
 function loadTemplate(callback) {
-    // Get external template with fetch
-    fetch('templates/crypto_price.py')
+    fetch('templates/currency_exchange.py')
     .then(
         response => response.text()
     )
@@ -26,90 +17,32 @@ function loadTemplate(callback) {
         generateJSON(response, function(d){
             return callback(d);
         });
-        
     });  
 }
 
 function generateJSON(template, cb) {
-    
-    const userData = Page.getSelectedValues();
+    const userData = Page.getSelectedWidgets();
     
     let output = new BTTSchema.preset(),
-        coinArray = [];
+        widgetArray = [];
 
-    userData.selectedCoins.forEach((item, i) => {
-        let coin = new BTTSchema.widget(),
-        iconCanv = document.createElement('canvas'),
-        iconSVG = document.getElementById(item+'-touch-icon').outerHTML;
-
-        // Add svgs to hidden canvas so they can be exported to base64 png for BTT
-        canvg(iconCanv, iconSVG, {
-            ignoreMouse: true,
-            ignoreAnimation: true
-        });
-        iconCanv.id = item;
-        document.getElementById('canvas-area').appendChild(iconCanv);
-
-        coin.BTTWidgetName = item;
-        coin.BTTOrder = i;
-
-        // Get and set element colour
-        let coinColour = document.getElementById(item + '-colour').style.backgroundColor;
-        let rgbVals = coinColour.match(/\d+/g);
-
-        coin.BTTTriggerConfig.BTTTouchBarButtonColor = rgbVals.join(', ') + ', 255';
-
-        // Get canvas svg and convert it to png base64 for output to BTT
-        let base64PNG = document.getElementById(item).toDataURL('image/png');
-        base64PNG = base64PNG.replace('data:image/png;base64,', '');
-
-        coin.BTTIconData = base64PNG;
-
-        let extraOptions = 'False';
-        if (userData.apiSelector.dataset.apitype == 'historical') {
-            extraOptions = '&limit=1&aggregate=1&toTs=' + userData.dateTimeSelector.value;
-        }
-        
+    userData.forEach((item, i) => {
         let data = {
-            coin_ticker: coin.BTTWidgetName,
-            fiat_ticker: userData.selectedFiatObj.ticker,
-            fiat_symbol: userData.selectedFiatObj.symbol,
-            format: userData.outputFormat,
-            literalRound: userData.literalRound,
-            percentageRound: userData.percentageRound,
-            percent: userData.userPercentageModifer,
-            output_type: userData.formatSelector,
-            apiSelector: userData.apiSelector.dataset.apitype,
-            extraOptions: extraOptions,
-            offline_cache: userData.cacheBool
+            base_ticker: item.dataset.baseTicker,
+            convert_ticker: item.dataset.convertTicker,
+            base_symbol: item.dataset.baseSymbol,
+            convert_symbol: item.dataset.convertSymbol,
         };
 
-        coin.BTTTriggerConfig.BTTTouchBarAppleScriptString = Mustache.render(template, data);
-
-        coin.BTTTriggerConfig.BTTTouchBarScriptUpdateInterval = parseInt(userData.refreshTimer);
-
-        coinArray.push(coin);
+        let widget = new BTTSchema.widget();
+        widget.BTTWidgetName = item.dataset.baseTicker + '_' + item.dataset.convertTicker;
+        widget.BTTOrder = i;
+        widget.BTTTriggerConfig.BTTTouchBarAppleScriptString = Mustache.render(template, data);
+        widget.BTTTriggerConfig.BTTTouchBarScriptUpdateInterval = 900;
+        widgetArray.push(widget);
     });
 
-    if (userData.groupBool) {
-        const closeGroup = new BTTSchema.closeWidget();
-        closeGroup.BTTOrder = userData.selectedCoins.length;
-        coinArray.push(closeGroup);
-        output.BTTPresetContent[0].BTTTriggers[0].BTTAdditionalActions = coinArray;
-        output.BTTPresetContent[0].BTTTriggers[0].BTTIconData = userData.selectedFiatObj.icon;
-
-        if (userData.apiSelector.dataset.apitype == 'historical') {
-
-            output.BTTPresetContent[0].BTTTriggers[0].BTTTouchBarButtonName = userData.dateTimeSelectorString.value;
-        }
-    }
-    else {
-        output.BTTPresetContent[0].BTTTriggers = coinArray;
-    }
-
-    output.BTTPresetName = output.BTTPresetName + "-" + userData.selectedFiatObj.ticker;
-
-    clearTempSVGs();
+    output.BTTPresetContent[0].BTTTriggers = widgetArray;
 
     return cb(output);
 }
